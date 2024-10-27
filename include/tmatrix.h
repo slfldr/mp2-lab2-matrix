@@ -196,7 +196,7 @@ public:
       }
       return result;
   }
-  T operator*(const TDynamicVector& v) noexcept(noexcept(T()))
+  T operator*(const TDynamicVector& v) //noexcept(noexcept(T()))
   {
       if (sz != v.sz)
       {
