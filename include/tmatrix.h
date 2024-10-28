@@ -44,6 +44,10 @@ public:
   {
     assert(arr != nullptr && "TDynamicVector ctor requires non-nullptr arg");
     pMem = new T[sz];
+    if (pMem == nullptr)
+    {
+        throw bad_alloc();
+    }
     copy(arr, arr + sz, pMem);
   }
   TDynamicVector(const TDynamicVector& v)
@@ -242,8 +246,14 @@ class TDynamicMatrix : private TDynamicVector<TDynamicVector<T>>
 public:
   TDynamicMatrix(size_t s = 1) : TDynamicVector<TDynamicVector<T>>(s)
   {
+    if (s == 0)
+    {
+         throw out_of_range("Matrix size should be greater than zero");
+    }
     if (s > MAX_MATRIX_SIZE)
-        throw out_of_range("Matrix size must meet the conditions");
+    {
+         throw out_of_range("Matrix size must meet the conditions");
+    }
     for (size_t i = 0; i < sz; i++)
       pMem[i] = TDynamicVector<T>(sz);
   }
@@ -255,15 +265,23 @@ public:
   // сравнение
   bool operator==(const TDynamicMatrix& m) const noexcept
   {
-      for (size_t i = 0; i < sz; i++)
+      if (sz == m.sz)
       {
-          if (pMem[i] != m.pMem[i])
+          for (size_t i = 0; i < sz; i++)
           {
-              return 0;
+              if (pMem[i] != m.pMem[i])
+              {
+                  return 0;
+              }  
           }
-      }       
-      return 1;
+          return 1;
+      }
+      else
+      {
+          return 0;
+      }
   }
+
   bool operator!=(const TDynamicMatrix& m) const noexcept
   {
       return !(*this == m);
@@ -283,9 +301,9 @@ public:
   // матрично-векторные операции
   TDynamicVector<T> operator*(const TDynamicVector<T>& v)
   {
-      if (sz != v.sz)
+      if (sz != v.size())
       {
-          throw logic_error("You cannot multiply vectors of different lengths");
+          throw logic_error("Vector and matrix must have different lengths");
       }
       TDynamicVector<T> result(sz);
       for (size_t i = 0; i < sz; i++)
@@ -335,7 +353,7 @@ public:
           {
               for (size_t k = 0; k < sz; k++)
               {
-                  result.pMem[i][j] += pMem[i][k] * m.pmem[k][j];
+                  result.pMem[i][j] += pMem[i][k] * m.pMem[k][j];
               }
           }
       }
