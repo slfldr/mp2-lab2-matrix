@@ -1,249 +1,256 @@
 #include "tmatrix.h"
-
 #include <gtest.h>
 
-class TDynamicVectorTest : public ::testing::Test
+template <typename T>
+class TestTVector : public ::testing::Test
 {
 protected:
-	void SetUp() override
-	{
-		v1 = new TDynamicVector<int>(5);
-		v2 = new TDynamicVector<int>(5);
-		v3 = new TDynamicVector<int>(3);
-	}
+	TDynamicVector<T>* v1;
+	TDynamicVector<T>* v2;
+	TDynamicVector<T>* add;
+	TDynamicVector<T>* sub;
+	TDynamicVector<T>* v_test;
 
-	void TearDown() override
+	T* arr_v1;
+	T* arr_v2;
+	T* arr_add;
+	T* arr_sub;
+	T* add_scal;
+	T* sub_scal;
+	T* mult_scal;
+public:
+	void SetUp()
 	{
+		arr_v1 = new T[5] { 5, 8, 10, -15, 6};
+		arr_v2 = new T[5] {0, 3, -6, 8, 6};
+		arr_add = new T[5] {5, 11, 4, -7, 12};
+		arr_sub = new T[5] {5, 5, 16, -23, 0};
+		add_scal = new T[5] {10, 13, 15, -10, 11};
+		sub_scal = new T[5] {0, 3, 5, -20, 1};
+		mult_scal = new T[5] {10, 16, 20, -30, 12};
+
+		v1 = new TDynamicVector<T>(arr_v1, 5);
+		v2 = new TDynamicVector<T>(arr_v2, 5);
+		add = new TDynamicVector<T>(arr_add, 5);
+		sub = new TDynamicVector<T>(arr_sub, 5);
+	}
+	void TearDown()
+	{
+		delete[] arr_v1;
+		arr_v1 = nullptr;
+		delete[] arr_v2;
+		arr_v2 = nullptr;
+		delete[] arr_add;
+		arr_add = nullptr;
+		delete[] arr_sub;
+		arr_sub = nullptr;
+		delete[] add_scal;
+		add_scal = nullptr;
+		delete[] sub_scal;
+		sub_scal = nullptr;
+
 		delete v1;
 		delete v2;
-		delete v3;
+		delete add;
+		delete sub;
 	}
-
-	TDynamicVector<int>* v1;
-	TDynamicVector<int>* v2;
-	TDynamicVector<int>* v3;
+	void CreateVector(size_t size = 1, size_t flag = 0)
+	{
+		if (flag)
+		{
+			v_test = new TDynamicVector<T>(*v1);
+		}
+		else
+		{
+			v_test = new TDynamicVector<T>(size);
+		}
+	}
+	void CreateVectorRes(T* arr, size_t size = 1)
+	{
+		v_test = new TDynamicVector<T>(arr, size);
+	}
 };
 
-TEST_F(TDynamicVectorTest, can_create_vector_with_positive_length)
+TYPED_TEST_CASE_P(TestTVector);
+
+TYPED_TEST_P(TestTVector, can_create_vector_with_positive_length)
 {
-  ASSERT_NO_THROW(TDynamicVector<int> v(5));
+	ASSERT_NO_THROW(this -> CreateVector(5));
 }
 
-TEST_F(TDynamicVectorTest, cant_create_too_large_vector)
+TYPED_TEST_P(TestTVector, cant_create_too_large_vector)
 {
-  ASSERT_ANY_THROW(TDynamicVector<int> v(MAX_VECTOR_SIZE + 1));
+	ASSERT_ANY_THROW(this -> CreateVector(MAX_VECTOR_SIZE + 1));
 }
 
-TEST_F(TDynamicVectorTest, throws_when_create_vector_with_negative_length)
+TYPED_TEST_P(TestTVector, throws_when_create_vector_with_negative_length)
 {
-  ASSERT_ANY_THROW(TDynamicVector<int> v(-5));
+	ASSERT_ANY_THROW(this -> CreateVector(-5));
 }
 
-TEST_F(TDynamicVectorTest, can_create_copied_vector)
+TYPED_TEST_P(TestTVector, can_create_copied_vector)
 {
-  TDynamicVector<int> v(10);
-
-  ASSERT_NO_THROW(TDynamicVector<int> v1(v));
+	ASSERT_NO_THROW(this -> CreateVector(10, 1));
 }
 
-TEST_F(TDynamicVectorTest, copied_vector_is_equal_to_source_one)
+TYPED_TEST_P(TestTVector, copied_vector_is_equal_to_source_one)
 {
-	(*v1)[0] = 2;
+	this -> CreateVector(4, 1);
 
-	TDynamicVector<int> v2(*v1);
-
-	EXPECT_EQ(*v1, v2);
+	EXPECT_EQ(*v_test, *v1);
 }
 
-TEST_F(TDynamicVectorTest, copied_vector_has_its_own_memory)
+TYPED_TEST_P(TestTVector, copied_vector_has_its_own_memory)
 {
-	TDynamicVector<int> v2(*v1);
+	this -> CreateVector(4, 1);
 
-	EXPECT_NE(v1, &v2);
+	EXPECT_NE(v_test, v1);
 }
 
-TEST_F(TDynamicVectorTest, can_get_size)
+TYPED_TEST_P(TestTVector, can_get_size)
 {
-	EXPECT_EQ(5, v1->size());
+	EXPECT_EQ(5, v1 -> size());
 }
 
-TEST_F(TDynamicVectorTest, can_set_and_get_element)
+TYPED_TEST_P(TestTVector, can_set_and_get_element)
 {
-	(*v1)[0] = 4;
-
-	EXPECT_EQ(4, (*v1)[0]);
+	EXPECT_EQ(5, v1 -> at(0));
 }
 
-TEST_F(TDynamicVectorTest, throws_when_set_element_with_negative_index)
+TYPED_TEST_P(TestTVector, throws_when_set_element_with_negative_index)
 {
-	ASSERT_ANY_THROW((*v1).at(-1) = 7);
+	ASSERT_ANY_THROW(v1 -> at(-1) = 7);
 }
 
-TEST_F(TDynamicVectorTest, throws_when_set_element_with_too_large_index)
+TYPED_TEST_P(TestTVector, throws_when_set_element_with_too_large_index)
 {
-	ASSERT_ANY_THROW((*v1).at(6) = 7);
+	ASSERT_ANY_THROW(v1 -> at(6) = 7);
 }
 
-TEST_F(TDynamicVectorTest, can_assign_vector_to_itself)
+TYPED_TEST_P(TestTVector, can_assign_vector_to_itself)
 {
 	*v1 = *v1;
 
 	EXPECT_EQ(*v1, *v1);
 }
 
-TEST_F(TDynamicVectorTest, can_assign_vectors_of_equal_size)
+TYPED_TEST_P(TestTVector, can_assign_vectors_of_equal_size)
 {
-	(*v2)[1] = 7;
 	*v1 = *v2;
 
 	EXPECT_EQ(*v1, *v2);
 }
 
-TEST_F(TDynamicVectorTest, assign_operator_change_vector_size)
+TYPED_TEST_P(TestTVector, assign_operator_change_vector_size)
 {
-	*v1 = *v3;
+	this -> CreateVector(4);
 
-	EXPECT_EQ(3, v1->size());
+	*v1 = *v_test;
+
+	EXPECT_EQ(4, v1->size());
 }
 
-TEST_F(TDynamicVectorTest, can_assign_vectors_of_different_size)
+TYPED_TEST_P(TestTVector, can_assign_vectors_of_different_size)
 {
-	(*v1)[0] = 4;
-	*v1 = *v3;
+	this -> CreateVector(4);
 
-	EXPECT_EQ(*v1, *v3);
+	*v1 = *v_test;
+
+	EXPECT_EQ(*v1, *v_test);
 }
 
-TEST_F(TDynamicVectorTest, compare_equal_vectors_return_true)
+TYPED_TEST_P(TestTVector, compare_equal_vectors_return_true)
 {
-	(*v1)[1] = 7;
-	(*v2)[1] = 7;
+	*v1 = *v2;
 
 	EXPECT_TRUE(*v1 == *v2);
 }
 
-TEST_F(TDynamicVectorTest, compare_vector_with_itself_return_true)
+TYPED_TEST_P(TestTVector, compare_vector_with_itself_return_true)
 {
-	(*v1)[0] = 4;
-
 	EXPECT_TRUE(*v1 == *v1);
 }
 
-TEST_F(TDynamicVectorTest, vectors_with_different_size_are_not_equal)
+TYPED_TEST_P(TestTVector, vectors_with_different_size_are_not_equal)
 {
-	EXPECT_TRUE(*v1 != *v3);
+	this -> CreateVector(4);
+
+	EXPECT_FALSE(*v1 == *v_test);
 }
 
-TEST_F(TDynamicVectorTest, can_add_scalar_to_vector)
+TYPED_TEST_P(TestTVector, can_add_scalar_to_vector)
 {
-	TDynamicVector<int> res(5);
+	this -> CreateVectorRes(add_scal, 5);
 
-	for (size_t i = 0; i < 5; i++)
-	{
-		res[i] = 4;
-	}
+	*v1 = *v1 + 5;
 
-	*v1 = *v1 + 4;
-
-	EXPECT_EQ(*v1, res);
+	EXPECT_EQ(*v1, *v_test);
 }
 
-TEST_F(TDynamicVectorTest, can_subtract_scalar_from_vector)
+TYPED_TEST_P(TestTVector, can_subtract_scalar_from_vector)
 {
-	TDynamicVector<int> res(5);
+	this -> CreateVectorRes(sub_scal, 5);
 
-	for (size_t i = 0; i < 5; i++)
-	{
-		res[i] = -4;
-	}
+	*v1 = *v1 - 5;
 
-	*v1 = *v1 - 4;
-
-	EXPECT_EQ(*v1, res);
+	EXPECT_EQ(*v1, *v_test);
 }
 
-TEST_F(TDynamicVectorTest, can_multiply_scalar_by_vector)
+TYPED_TEST_P(TestTVector, can_multiply_scalar_by_vector)
 {
-	TDynamicVector<int> res(5);
+	this -> CreateVectorRes(mult_scal, 5);
 
-	for (size_t i = 0; i < 5; i++)
-	{
-		res[i] = 10;
-	}
-
-	for (size_t i = 0; i < 5; i++)
-	{
-		(*v1)[i] = 5;
-	}
-
-	*v1 = *v1 * 2;
-
-	EXPECT_EQ(*v1, res);
+	EXPECT_EQ(*v1 * 2, *v_test);
 }
 
-TEST_F(TDynamicVectorTest, can_add_vectors_with_equal_size)
+TYPED_TEST_P(TestTVector, can_add_vectors_with_equal_size)
 {
-	for (size_t i = 0; i < 5; i++)
-	{
-		(*v1)[i] = 8;
-		(*v2)[i] = 4;
-	}
-
-	TDynamicVector<int> res(5);
-
-	for (size_t i = 0; i < 5; i++)
-	{
-		res[i] = 12;
-	}
-
-	*v2 = *v1 + *v2;
-	
-	EXPECT_EQ(res, *v2);
+	EXPECT_EQ(*add, *v1 + *v2);
 }
 
-TEST_F(TDynamicVectorTest, cant_add_vectors_with_not_equal_size)
+TYPED_TEST_P(TestTVector, cant_add_vectors_with_not_equal_size)
 {
-	ASSERT_ANY_THROW(*v1 + *v3);
+	this -> CreateVector(4);
+
+	ASSERT_ANY_THROW(*v1 + *v_test);
 }
 
-TEST_F(TDynamicVectorTest, can_subtract_vectors_with_equal_size)
+TYPED_TEST_P(TestTVector, can_subtract_vectors_with_equal_size)
 {
-	for (size_t i = 0; i < 5; i++)
-	{
-		(*v1)[i] = 10;
-	}
-	for (size_t i = 0; i < 3; i++)
-	{
-		(*v2)[i] = 5;
-	}
-
-	TDynamicVector<int> res(5);
-
-	res[0] = 5;
-	res[1] = 5;
-	res[2] = 5;
-	res[3] = 10;
-	res[4] = 10;
-
-	*v1 = *v1 - *v2;
-
-	EXPECT_EQ(res, *v1);
+	EXPECT_EQ(*sub, *v1 - *v2);
 }
 
-TEST_F(TDynamicVectorTest, cant_subtract_vectors_with_not_equal_size)
+TYPED_TEST_P(TestTVector, cant_subtract_vectors_with_not_equal_size)
 {
-	ASSERT_ANY_THROW(*v1 - *v3);
+	this -> CreateVector(4);
+
+	ASSERT_ANY_THROW(*v1 - *v_test);
 }
 
-TEST_F(TDynamicVectorTest, can_multiply_vectors_with_equal_size)
+TYPED_TEST_P(TestTVector, can_multiply_vectors_with_equal_size)
 {
-	(*v1)[2] = 2;
-	(*v2)[2] = 1;
-
-	EXPECT_EQ(2, *v1 * *v2);
+	EXPECT_EQ(-120, *v1 * (*v2));
 }
 
-TEST_F(TDynamicVectorTest, cant_multiply_vectors_with_not_equal_size)
+TYPED_TEST_P(TestTVector, cant_multiply_vectors_with_not_equal_size)
 {
-	ASSERT_ANY_THROW(*v1 * *v3);
+	this -> CreateVector(14);
+
+	ASSERT_ANY_THROW(*v1 * (*v_test));
 }
+
+REGISTER_TYPED_TEST_CASE_P(TestTVector, can_create_vector_with_positive_length,
+	cant_create_too_large_vector, throws_when_create_vector_with_negative_length,
+	can_create_copied_vector, copied_vector_is_equal_to_source_one, copied_vector_has_its_own_memory,
+	can_get_size, can_set_and_get_element, throws_when_set_element_with_negative_index,
+	throws_when_set_element_with_too_large_index, can_assign_vector_to_itself,
+	can_assign_vectors_of_equal_size, assign_operator_change_vector_size,
+	can_assign_vectors_of_different_size, compare_equal_vectors_return_true,
+	compare_vector_with_itself_return_true, vectors_with_different_size_are_not_equal,
+	can_add_scalar_to_vector, can_subtract_scalar_from_vector, can_multiply_scalar_by_vector,
+	can_add_vectors_with_equal_size, cant_add_vectors_with_not_equal_size,
+	can_subtract_vectors_with_equal_size, cant_subtract_vectors_with_not_equal_size,
+	can_multiply_vectors_with_equal_size, cant_multiply_vectors_with_not_equal_size);
+
+typedef ::testing::Types<int, float, double> TestTVectorTypes;
+INSTANTIATE_TYPED_TEST_CASE_P(TestTVectorInstantiation, TestTVector, TestTVectorTypes);
